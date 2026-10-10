@@ -35,6 +35,28 @@
             min-height: 100vh;
         }
 
+        /* --- EFEK TAMBAHAN: PARTIKEL CAHAYA MELAYANG (FAIRY DUST) --- */
+        .sparkles-container {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+        .sparkle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.8);
+            box-shadow: 0 0 12px rgba(255, 77, 109, 0.6);
+            border-radius: 50%;
+            animation: floatUp linear infinite;
+        }
+        @keyframes floatUp {
+            0% { transform: translateY(100vh) scale(0); opacity: 0; }
+            20% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { transform: translateY(-10vh) scale(1.5) rotate(360deg); opacity: 0; }
+        }
+
         h1, h2, h3, .cursive-text, .polaroid p {
             font-family: 'Dancing Script', cursive;
             color: var(--pink-dark);
@@ -51,8 +73,14 @@
             border-radius: 50%;
             box-shadow: inset -15px -15px 0 0 var(--pink-medium);
             transform: rotate(-20deg);
-            z-index: 0;
-            opacity: 0.7;
+            z-index: 1;
+            opacity: 0.8;
+            /* --- EFEK TAMBAHAN: BULAN GLOWING BERDENYUT --- */
+            animation: moonPulse 3s infinite alternate ease-in-out;
+        }
+        @keyframes moonPulse {
+            0% { filter: drop-shadow(0 0 5px rgba(255, 143, 163, 0.4)); }
+            100% { filter: drop-shadow(0 0 20px rgba(255, 143, 163, 0.9)); }
         }
 
         #ghost-container {
@@ -163,6 +191,13 @@
             color: var(--white);
             border: 2px solid var(--pink-dark);
             box-shadow: 0 5px 15px rgba(255, 77, 109, 0.3);
+            /* --- EFEK TAMBAHAN: TOMBOL PRIMARY GLOWING --- */
+            animation: btnPulse 2s infinite;
+        }
+        @keyframes btnPulse {
+            0% { box-shadow: 0 5px 15px rgba(255, 77, 109, 0.3); }
+            50% { box-shadow: 0 5px 25px rgba(255, 77, 109, 0.7); }
+            100% { box-shadow: 0 5px 15px rgba(255, 77, 109, 0.3); }
         }
         .btn-primary:hover {
             background-color: var(--pink-medium);
@@ -421,7 +456,6 @@
     </audio>
 
     <div id="ghost-container"></div>
-
     <div class="moon"></div>
     <canvas id="confetti-canvas"></canvas>
 
@@ -541,6 +575,22 @@
     </div>
 
     <script>
+        // --- EFEK TAMBAHAN: MEMBUAT PARTIKEL FAIRY DUST MELAYANG DI BACKGROUND ---
+        const sparklesContainer = document.createElement('div');
+        sparklesContainer.className = 'sparkles-container';
+        document.body.insertBefore(sparklesContainer, document.body.firstChild);
+        for(let i=0; i<40; i++){
+            let sp = document.createElement('div');
+            sp.className = 'sparkle';
+            sp.style.left = Math.random() * 100 + 'vw';
+            sp.style.width = Math.random() * 8 + 4 + 'px';
+            sp.style.height = sp.style.width;
+            sp.style.animationDuration = Math.random() * 8 + 4 + 's';
+            sp.style.animationDelay = Math.random() * 5 + 's';
+            sparklesContainer.appendChild(sp);
+        }
+        // --------------------------------------------------------------------------
+
         function playSound(audioId) {
             const sound = document.getElementById(audioId);
             if (sound) {
@@ -776,7 +826,6 @@
         }
 
         // --- MENGHENTIKAN EFEK JEDAG JEDUG SAAT LAGUNYA HABIS ---
-        // --- MENGHENTIKAN EFEK JEDAG JEDUG SAAT LAGUNYA HABIS ---
         const soundParty = document.getElementById('sound-party');
         let partyPlayCount = 0; // Bikin memori penghitung
 
@@ -811,10 +860,12 @@
             constructor() {
                 this.x = Math.random() * canvas.width;
                 this.y = Math.random() * canvas.height - canvas.height;
-                this.size = Math.random() * 8 + 5;
+                this.size = Math.random() * 10 + 5;
                 this.speedY = Math.random() * 3 + 1.5;
                 this.speedX = Math.random() * 2 - 1;
-                this.color = ['#ff4d6d', '#ff8fa3', '#ffffff'][Math.floor(Math.random() * 3)];
+                // --- EFEK TAMBAHAN: WARNA DAN BENTUK CONFETTI LEBIH FESTIVE ---
+                this.color = ['#ff4d6d', '#ff8fa3', '#ffffff', '#ffd166', '#ff9f1c'][Math.floor(Math.random() * 5)];
+                this.shape = Math.random() > 0.5 ? 'circle' : 'rect';
                 this.rotation = Math.random() * 360;
                 this.rotationSpeed = Math.random() * 5 - 2.5;
             }
@@ -832,14 +883,24 @@
                 ctx.translate(this.x, this.y);
                 ctx.rotate(this.rotation * Math.PI / 180);
                 ctx.fillStyle = this.color;
-                ctx.globalAlpha = 0.8;
-                ctx.fillRect(-this.size/2, -this.size/2, this.size, this.size);
+                ctx.globalAlpha = 0.9;
+                
+                // Variasi bentuk lingkaran atau persegi
+                if (this.shape === 'circle') {
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.size/2, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    ctx.fillRect(-this.size/2, -this.size/2, this.size, this.size);
+                }
+                
                 ctx.restore();
             }
         }
 
         function startConfetti() {
-            for (let i = 0; i < 100; i++) {
+            // Jumlah confetti ditambahkan agar lebih heboh
+            for (let i = 0; i < 150; i++) {
                 particles.push(new Particle());
             }
             function animate() {
